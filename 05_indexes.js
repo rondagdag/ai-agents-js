@@ -6,7 +6,7 @@ import { CharacterTextSplitter } from "langchain/text_splitter";
 import { OpenAIEmbeddings } from "langchain/embeddings/openai";
 import { FaissStore } from "langchain/vectorstores/faiss";
 
-const loader = new TextLoader("./trivia.txt");
+const loader = new TextLoader("./texts/J. K. Rowling - Harry Potter 1 - Sorcerer's Stone.txt");
 
 const docs = await loader.load();
 

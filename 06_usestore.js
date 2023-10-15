@@ -18,6 +18,6 @@ const chain = new RetrievalQAChain({
 });
 
 const res = await chain.call({
-  query: "What is a Horcrux?",
+  query: "Who used Alohomora spell? Where was it used on which door?",
 });
 console.log(res.text);
