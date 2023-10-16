@@ -2,7 +2,6 @@ import { config } from "dotenv";
 config();
 
 import { ChatOpenAI } from "langchain/chat_models/openai";
-import { SerpAPI } from "langchain/tools";
 import { initializeAgentExecutorWithOptions } from "langchain/agents";
 import { Calculator } from "langchain/tools/calculator";
 import { DynamicTool } from "langchain/tools";
