@@ -1,1 +1,9 @@
 OPENAI_API_KEY=<your key>
+OPENAI_API_TYPE=OPENAI # AZURE_OPENAI
+OPENAI_API_KEY=<your key>
+# if using Azure OpenAI change OPENAI_API_TYPE to AZURE_OPENAI and fill in the following
+AZURE_OPENAI_MODELS=gpt-3.5-turbo,gpt-4,text-curie-001
+# AZURE_OPENAI_API_VERSION=2023-05-15 #default
+# AZURE_OPENAI_API_INSTANCE_NAME=<instance name>
+# AZURE_OPENAI_API_DEPLOYMENT_NAME=<deployment name>
+# AZURE_OPENAI_API_KEY=<your key>
