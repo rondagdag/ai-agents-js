@@ -20,7 +20,7 @@ async function chat(input) {
   return response.data.choices[0].message.content;
 }
 
-const question = "Who wrote the 'Harry Potter' series book? What's her real name? Why she choose that name?";
+const question = "Who wrote the 'Harry Potter' series book? What's the real name? Why choose that name?";
 
 chat(question)
   .then((response) => console.log(response))

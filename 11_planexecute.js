@@ -67,7 +67,7 @@ const executor = PlanAndExecuteAgentExecutor.fromLLMAndTools({
 });
 
 const result = await executor.call({
-  input: `How many houses in Harry Potter? Multiply the result by today's day.`,
+  input: `How many houses in Harry Potter? Multiply the result by today's year.`,
 });
 
 console.log(result);

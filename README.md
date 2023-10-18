@@ -1,6 +1,5 @@
-# ai-agents-js
 
-# Crafting AI Agents in Javascript and the Wizardry of Prompt Engineering
+# Prompt Engineer and the AI Agents in Javascript
 
 Prompts in a language model are like magic spells. You tell the model what you want to talk about or ask, and it generates a magical response based on the input. AI agents are like the wizard who consults their spell book to cast a series of spells. AI Agents use a large language model (LLM) as a reasoning engine to determine which actions to take and in which order. Attend this session to learn how to craft AI Agents in JavaScript using LangChain and other prompt engineering techniques. Alohomora!
 
@@ -20,19 +19,21 @@ In this example you find a node app that can be used to learn LangChain in Javas
 - `10_conversationalagents.js`: How to create an agent in Langchain that designed to be used for conversational settings.
 - `11_planexecute.js`: Plan and execute agents accomplish an objective by first planning what to do, then executing the sub tasks. This idea is largely inspired by BabyAGI and then the "Plan-and-Solve" paper.
 - `12_sqltoolkit.js`: This example shows how to load and use an agent with a SQL toolkit.
+- `13_sequentialchaincocktail.js`: This example shows how to generate unique cocktails.
 
 To run these examples, clone the git repository and run npm install to install die dependencies. You need to create a .env file and add your API Key for OpenAI like this: OPENAI_API_KEY=sk-...
 
 This codes utilizes ES6 modules, to allow import statements and async/await within NodeJS.
   
 ### Presentation resources
-- [Slidedeck](https://speakerdeck.com/rondagdag/)
+- [Slidedeck](./ai-agents-js.pdf)
 
 ### Resources
 - [Inspired by LangChain JS Crash Course](https://github.com/Coding-Crashkurse/LangChain-JS-Full-Course#readme)
 
 - [Harry Potter Manuscript](https://github.com/amephraim/nlp/blob/master/texts/)
 
+- [OpenAI Cocktail Recipes Generator](https://github.com/swamichandra/cocktails)
 
 ### Speakers
 - [Ron Dagdag](https://www.dagdag.net)
