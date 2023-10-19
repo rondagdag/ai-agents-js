@@ -1,6 +1,8 @@
 import { config } from "dotenv";
 config();
 
+
+import { Configuration, OpenAIApi } from "openai";
 import { SequentialChain, LLMChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
 import { ChatOpenAI } from "langchain/chat_models/openai";
@@ -56,16 +58,42 @@ let overallChain = new SequentialChain({
 
 
 let { drink, ingredientInput, inspirationInput, cuisine, mainDish } = GetRandomInput();
+console.log(drink);
 
 const result = await overallChain.call({'drink': drink, 'ingredient': ingredientInput, 'inspiration': inspirationInput, 'cuisine': cuisine,'cocktail_name': '', 'additional_instructions':'', 'main_dish': mainDish});
 console.log(result);
 
+let cocktailName = result['cocktail'].substring(0, result['cocktail'].indexOf("Ingredients"));
+cocktailName = cocktailName.split("Cocktail Name:")[1].trim();
+
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+const openai = new OpenAIApi(configuration);
+
+let prompt4Diffusion = `${drink} drink named ${cocktailName}. Contains ${ingredientInput}. Magazine cover --ar 4:3 --v 4 --c 100`;
+console.log(prompt4Diffusion);
+
+// Here's how you could create an image using OpenAI's API
+let image_resp = await openai.createImage({
+  prompt: prompt4Diffusion,
+  n: 1,
+  size: '512x512'
+});
+
+console.log(image_resp.data.data[0].url);
 
 
 function getRandomChoices(array, k) {
-  let result = [];
-  for (let i = 0; i < k; i++) {
-    result.push(array[Math.floor(Math.random() * array.length)]);
+  let result = new Array(k),
+    len = array.length,
+    taken = new Array(len);
+  if (k > len)
+    throw new RangeError("getRandomChoices: more elements taken than available");
+  while (k--) {
+    let x = Math.floor(Math.random() * len);
+    result[k] = array[x in taken ? taken[x] : x];
+    taken[x] = --len in taken ? taken[len] : len;
   }
   return result;
 }
@@ -112,6 +140,7 @@ function GetRandomInput() {
 
   let optionalIngredient = [];
   let drink = getRandomChoices(drinkOptions, 1).toString();
+
   let mainDish = getRandomChoices(cuisine_list, 1).toString();
   let ingredientInput = getIngredient(drink, ingredients, ingredients_nonalcoholic, optionalIngredient);
   let inspirationInput = getInspiration(drink, inspiration, inspiration_nonalcoholic);
