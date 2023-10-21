@@ -23,8 +23,8 @@ const FREQ_PENALTY = 1.02
 //increasing the model's likelihood to talk about new topics
 const PRESENCE_PENALTY = 1.02
 
-let template = `I want someone who can suggest a Harry Potter inspired drink recipes. You are my master mixologist. You will come up with olfactory pleasant Harry Potter inspired {drink} that is appealing and pairs well with the {cuisine} cuisine. Identify which House they would fit in. Ensure the drink pairs well with {main_dish}. Use {ingredient} in your recipe. Avoid eggs or yolk as ingredients. Draw inspiration from an existing cocktail recipe of {inspiration}. Apply understanding of flavor compounds and food pairing theories. Give the drink a unique name. Ingredients must start in a new line. Add a catch phrase for the drink within double quotes. Always provide a rationale. Also try to provide a scientific explanation for why the ingredients were chosen. {additional_instructions}. Provide evidence and citations for where you took the recipe from.
-Cocktail Name: 
+let template = `I want someone who can suggest a Harry Potter 3 course meal. You are my master chef. You will come up with olfactory pleasant Harry Potter inspired {meal} dish that is appealing and inspired by {cuisine} cuisine. Identify which House they would fit in. Use {ingredient} in your recipe. Make sure it pairs well existing drink recipe of {inspiration}. Apply understanding of flavor compounds and food pairing theories. Give the dish a unique name. Ingredients must start in a new line. Add a catch phrase for the drink within double quotes. Always provide a rationale. Also try to provide a scientific explanation for why the ingredients were chosen. {additional_instructions}. Provide evidence and citations for where you took the recipe from.
+Meal Name: 
 House: 
 Ingredients:
 Instructions:
@@ -34,47 +34,48 @@ Rationale:###
 
 //let llm = new OpenAI({ modelName:PRIMARY_MODEL,temperature: 0 });
 let llm = new ChatOpenAI({modelName:PRIMARY_MODEL, temperature:1, frequencyPenalty:FREQ_PENALTY, presencePenalty:PRESENCE_PENALTY, maxTokens:600, topP:1})
-let prompt4Cocktail = new PromptTemplate({inputVariables:["drink", "ingredient", "inspiration", "cuisine", "additional_instructions", "main_dish"], template})
-let cocktailGenChain = new LLMChain({llm:llm, prompt:prompt4Cocktail, outputKey:"cocktail", verbose:true})
+let prompt4Meal = new PromptTemplate({inputVariables:["meal", "ingredient", "inspiration", "cuisine", "additional_instructions"], template})
+let mealGenChain = new LLMChain({llm:llm, prompt:prompt4Meal, outputKey:"meal_name", verbose:false})
 
 //This is an LLMChain to generate a short haiku caption for the cocktail based on the ingredients.
 llm = new OpenAI({modelName:SECONDARY_MODEL, temperature:0.7, frequencyPenalty:FREQ_PENALTY, presencePenalty:PRESENCE_PENALTY, maxTokens:200, bestOf:3, topP:0.5})
 
-let template2 = `###Write a restaurant menu style short description for a {drink} that has the following ingredients {ingredient} and pairs well with {cuisine} cuisine###.`
+let template2 = `###Write a restaurant menu style short description for a {meal_name} inspired by with {cuisine} cuisine that has the following ingredients {ingredient}. Limit to 60 words. ###.`
 
-let prompt4Caption = new PromptTemplate({inputVariables:["drink", "ingredient", "cuisine"], template:template2})
-let cocktailCaptionChain = new LLMChain({llm:llm, prompt:prompt4Caption, outputKey:"caption", verbose:true})
+let prompt4Caption = new PromptTemplate({inputVariables:["meal_name", "ingredient", "cuisine"], template:template2})
+let mealCaptionChain = new LLMChain({llm:llm, prompt:prompt4Caption, outputKey:"caption", verbose:false})
 
-//"drink", "ingredient", "inspiration", "cuisine", "additional_instructions", "main_dish"
+//"drink", "ingredient", "inspiration", "cuisine", "additional_instructions"
 //This is the overall chain where we run these two chains in sequence.
 let overallChain = new SequentialChain({
-    chains:[cocktailGenChain, cocktailCaptionChain],
-    inputVariables:['drink', 'ingredient', 'inspiration', 'cuisine', 'additional_instructions', 'main_dish'],
+    chains:[mealGenChain, mealCaptionChain],
+    inputVariables:['meal', 'ingredient', 'inspiration', 'cuisine', 'additional_instructions'],
     // Here we return multiple variables
-    outputVariables:['cocktail', 'caption'],
+    outputVariables:['meal_name', 'caption'],
     verbose:true})
 //END LLM portions
 
+let { meal, ingredientInput, inspirationInput, cuisine } = GetRandomInput();
+console.log(meal);
 
-
-let { drink, ingredientInput, inspirationInput, cuisine, mainDish } = GetRandomInput();
-console.log(drink);
-
-const result = await overallChain.call({'drink': drink, 'ingredient': ingredientInput, 'inspiration': inspirationInput, 'cuisine': cuisine,'cocktail_name': '', 'additional_instructions':'', 'main_dish': mainDish});
+const result = await overallChain.call({'meal': meal, 'ingredient': ingredientInput, 'inspiration': inspirationInput, 'cuisine': cuisine,'meal_name': '', 'additional_instructions':''});
 console.log(result);
 
-let cocktailName = result['cocktail'].substring(0, result['cocktail'].indexOf("Ingredients"));
-cocktailName = cocktailName.split("Cocktail Name:")[1].trim();
+let mealName = result['meal_name'].substring(0, result['meal_name'].indexOf("House:"));
+mealName = mealName.split("Meal Name:")[1].trim();
+
+let caption = result['caption'];
+console.log(caption);
 
 const configuration = new Configuration({
   apiKey: process.env.OPENAI_API_KEY,
 });
 const openai = new OpenAIApi(configuration);
 
-let prompt4Diffusion = `${drink} drink named ${cocktailName}. Contains ${ingredientInput}. Magazine cover --ar 4:3 --v 4 --c 100`;
+let prompt4Diffusion = `${meal} meal: ${mealName}. \nCaption: ${caption}\nInspiration: ${cuisine} meal. Magazine cover --ar 4:3 --v 4 --c 100`;
 console.log(prompt4Diffusion);
 
-// Here's how you could create an image using OpenAI's API
+//Here's how you could create an image using OpenAI's API
 let image_resp = await openai.createImage({
   prompt: prompt4Diffusion,
   n: 1,
@@ -131,20 +132,22 @@ function GetRandomInput() {
 
   let inspiration_nonalcoholic = ['Club Soda & Lime', 'Coconut Water', 'Faux Tropical Fizz', 'Frozen Blackberry Smoothie', 'Ginger Beer', 'Gunner', 'Iced Tea', 'Kombucha', 'Lassi', 'Lemon, Lime & Bitters', 'Lemonade', 'Mango Lassi', 'Nojito', 'Pineapple & Ginger Punch', 'Sidecar Mocktail', 'Summer Cup Mocktail', 'Tortuga', 'Piña Colada', 'Strawberry Milkshake', 'Chill-Out Honeydew Cucumber Slushy', 'Salted Watermelon Juice', 'Chile-Lime-Pineapple Soda', 'Strawberry-Ginger Lemonade', 'Huckleberry Shrub', 'Chai Blossom', 'Maple-Ginger Cider Switchel', 'Turmeric Tonic', 'Homemade Hawaiian Ginger Ale', 'Spicy Citrus Refresher', 'Better Than Celery Juice', 'Beet-Sumac Soda', 'Raspberry-Almond Soda', 'Salted Meyer Lemon and Sage Pressé', 'Lemon-Ginger Brew'];
 
-  let cuisine_list = ['All Occasions', 'Chinese', 'Greek', 'Indian', 'Italian', 'Japanese', 'American', 'Mexican', 'Thai', 'Mediterranean'];
+  let cuisine_list = ['All Occasions', 'Chinese', 'Greek', 'Indian', 'Italian', 'Japanese', 'American', 'Mexican', 'Thai', 'Mediterranean','Filipino','Tex-Mex','Turkish','French'];
   cuisine_list = cuisine_list.sort();
 
-  const NON_ALCOHOLIC_FLAG = false;
+  //const NON_ALCOHOLIC_FLAG = true;
   let drinkOptions = ['Cocktail', 'Shot', 'Punch', 'Non-Alcoholic'];
+  let mealOptions = ['Breakfast', 'Lunch', 'Dinner', 'Late-Night'];
 
 
   let optionalIngredient = [];
+  let meal = getRandomChoices(mealOptions, 1).toString();
   let drink = getRandomChoices(drinkOptions, 1).toString();
 
   let mainDish = getRandomChoices(cuisine_list, 1).toString();
   let ingredientInput = getIngredient(drink, ingredients, ingredients_nonalcoholic, optionalIngredient);
   let inspirationInput = getInspiration(drink, inspiration, inspiration_nonalcoholic);
   let cuisine = getRandomChoices(cuisine_list, 1).toString();
-  return { drink, ingredientInput, inspirationInput, cuisine, mainDish };
+  return { meal, ingredientInput, inspirationInput, cuisine, mainDish };
 }
 
