@@ -29,6 +29,13 @@ This codes utilizes ES6 modules, to allow import statements and async/await with
 - [Slidedeck](./ai-agents-js.pdf)
 
 ### Resources
+
+- [JS/TS Langchain](https://js.langchain.com/)
+
+- [Flowise](https://www.flowise.ai)
+
+- [Learn Prompting](https://learnprompting.org/)
+
 - [Inspired by LangChain JS Crash Course](https://github.com/Coding-Crashkurse/LangChain-JS-Full-Course#readme)
 
 - [Harry Potter Manuscript](https://github.com/amephraim/nlp/blob/master/texts/)
