@@ -23,7 +23,9 @@ let res = await chain.call({
 });
 console.log(res.text);
 
+
 res = await chain.call({
-  query: "What is today?",
+  query: "Who is Norbert?",
 });
+console.log(res.text);
 console.log(res.text);
