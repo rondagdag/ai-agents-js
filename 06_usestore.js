@@ -28,4 +28,3 @@ res = await chain.call({
   query: "Who is Norbert?",
 });
 console.log(res.text);
-console.log(res.text);
