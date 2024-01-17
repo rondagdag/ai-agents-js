@@ -1,8 +1,8 @@
 import { config } from "dotenv";
 config();
 
+import { Configuration, ChatOpenAI } from "@langchain/openai";
 
-import { Configuration, OpenAIApi } from "openai";
 import { SequentialChain, LLMChain } from "langchain/chains";
 import { OpenAI } from "langchain/llms/openai";
 import { ChatOpenAI } from "langchain/chat_models/openai";

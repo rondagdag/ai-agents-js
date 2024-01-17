@@ -1,17 +1,25 @@
 import { config } from "dotenv";
 config();
 
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { initializeAgentExecutorWithOptions } from "langchain/agents";
+
+import { BufferMemory } from "langchain/memory";
 import { Calculator } from "langchain/tools/calculator";
-import { DynamicTool } from "langchain/tools";
+import { DynamicTool } from "@langchain/community/tools/dynamic";
+
+import { RunnableSequence } from "@langchain/core/runnables";
+import { AgentExecutor } from "langchain/agents";
+
+import { formatToOpenAIFunctionMessages } from "langchain/agents/format_scratchpad";
+import { OpenAIFunctionsAgentOutputParser } from "langchain/agents/openai/output_parser";
+import {
+  ChatPromptTemplate,
+  MessagesPlaceholder,
+} from "@langchain/core/prompts";
+
+import { ChatOpenAI, formatToOpenAIFunction } from "@langchain/openai";
+
 
 process.env.LANGCHAIN_HANDLER = "langchain";
-const model = new ChatOpenAI({ 
-  temperature: 0,
-  modelName: "gpt-3.5-turbo",
-  verbose: false
-});
 
 function getTodayDateTime() {
   const timeZone = 'America/Chicago';
@@ -43,22 +51,82 @@ const dateTool = new DynamicTool({
 });
 const tools = [new Calculator(), dateTool];
 
-const executor = await initializeAgentExecutorWithOptions(tools, model, {
-  agentType: "chat-conversational-react-description",
-  verbose: false,
+
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "You are very powerful assistant"],
+  new MessagesPlaceholder("history"),
+  ["human", "{input}"],
+  new MessagesPlaceholder("agent_scratchpad"),
+]);
+
+/**
+ * Define your chat model to use.
+ */
+const model = new ChatOpenAI({
+  temperature: 0,
 });
 
-const input0 = "When is Harry Potters birth date?";
+const modelWithFunctions = model.bind({
+  functions: tools.map((tool) => formatToOpenAIFunction(tool)),
+});
 
-const result0 = await executor.call({ input: input0 });
+
+// Default "inputKey", "outputKey", and "memoryKey values would work here
+// but we specify them for clarity.
+const memory = new BufferMemory({
+  returnMessages: true,
+  inputKey: "input",
+  outputKey: "output",
+  memoryKey: "history",
+});
+
+
+console.log(await memory.loadMemoryVariables({}));
+
+const runnableAgent = RunnableSequence.from([
+  {
+    input: (i) => i.input,
+    memory: () => memory.loadMemoryVariables({}),
+    agent_scratchpad: (i) => formatToOpenAIFunctionMessages(i.steps),
+  },
+  {
+    input: (previousOutput) => previousOutput.input,
+    agent_scratchpad: (previousOutput) => previousOutput.agent_scratchpad,
+    history: (previousOutput) => previousOutput.memory.history,
+  },
+  prompt,
+  modelWithFunctions,
+  new OpenAIFunctionsAgentOutputParser()
+]);
+
+
+const executor = AgentExecutor.fromAgentAndTools({
+  agent: runnableAgent,
+  tools,
+});
+
+const input0 = { input: "Harry Potter's birthday Jan 01, 2000" };
+
+const result0 = await executor.invoke(input0);
 console.log(result0);
+// Save to History
 
-const input1 = "What is his age today? show how you calculated it.";
+await memory.saveContext(input0, {
+  output: result0.output,
+});
+console.log(await memory.loadMemoryVariables({}));
 
-const result1 = await executor.call({ input: input1 });
+const input1 = { input: "What is his age today? show how you calculated it." };
+
+const result1 = await executor.invoke(input1);
 console.log(result1);
 
-const input2 = "Multiply his age raised to the second power then add 5? show your calculation.";
+await memory.saveContext(input1, {
+  output: result1.output,
+});
 
-const result2 = await executor.call({ input: input2 });
+
+const input2 = { input: "Multiply his age raised to the second power then add 5? show your calculation}" };
+
+const result2 = await executor.invoke(input2);
 console.log(result2);

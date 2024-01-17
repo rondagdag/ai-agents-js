@@ -1,38 +1,72 @@
 import { config } from "dotenv";
 config();
 
-import { ConversationChain } from "langchain/chains";
-import { ChatOpenAI } from "langchain/chat_models/openai";
+import { BufferMemory } from "langchain/memory";
 import {
   ChatPromptTemplate,
-  HumanMessagePromptTemplate,
-  SystemMessagePromptTemplate,
   MessagesPlaceholder,
-} from "langchain/prompts";
-import { BufferMemory } from "langchain/memory";
+} from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { ChatOpenAI } from "@langchain/openai";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
-const chat = new ChatOpenAI({ temperature: 0 });
+const model = new ChatOpenAI({ temperature: 0 });
 
-const chatPrompt = ChatPromptTemplate.fromMessages([
-  SystemMessagePromptTemplate.fromTemplate(
-    "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know. The AI has an opinion on everything and is very talkative."
-  ),
+const prompt = ChatPromptTemplate.fromMessages([
+  ["system", "The following is a friendly conversation between a human and an AI. The AI is talkative and provides lots of specific details from its context. If the AI does not know the answer to a question, it truthfully says it does not know. The AI has an opinion on everything and is very talkative."],
   new MessagesPlaceholder("history"),
-  HumanMessagePromptTemplate.fromTemplate("{input}"),
+  ["human", "{input}"],
 ]);
 
-const chain = new ConversationChain({
-  memory: new BufferMemory({ returnMessages: true, memoryKey: "history" }),
-  prompt: chatPrompt,
-  llm: chat,
+// Default "inputKey", "outputKey", and "memoryKey values would work here
+// but we specify them for clarity.
+const memory = new BufferMemory({
+  returnMessages: true,
+  inputKey: "input",
+  outputKey: "output",
+  memoryKey: "history",
 });
 
-const response = await chain.call({
+
+console.log(await memory.loadMemoryVariables({}));
+
+/*
+  { history: [] }
+*/
+
+const chain = RunnableSequence.from([
+  {
+    input: (initialInput) => initialInput.input,
+    memory: () => memory.loadMemoryVariables({}),
+  },
+  {
+    input: (previousOutput) => previousOutput.input,
+    history: (previousOutput) => previousOutput.memory.history,
+  },
+  prompt,
+  model,
+  new StringOutputParser(),
+]);
+
+
+const inputs = {
   input: "What are the names of Hogwarts houses?",
-});
-console.log(response);
-const response2 = await chain.call({
-  input: "Which do you identify with based on your qualities, please select one and why?",
-});
+};
 
-console.log(response2);
+const response = await chain.invoke(inputs);
+
+console.log("AI Response: " + response);
+
+
+// Save to History
+await memory.saveContext(inputs, {
+  output: response,
+});
+console.log(await memory.loadMemoryVariables({}));
+
+const inputs2 = {
+  input: "Which do you identify with based on your qualities, please select one and why?",
+};
+const response2 = await chain.invoke(inputs2);
+
+console.log("AI Response: " +response2);

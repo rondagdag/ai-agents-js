@@ -3,10 +3,14 @@ config();
 
 import { TextLoader } from "langchain/document_loaders/fs/text";
 import { CharacterTextSplitter } from "langchain/text_splitter";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { FaissStore } from "langchain/vectorstores/faiss";
+import { OpenAIEmbeddings } from "@langchain/openai";
+import { FaissStore } from "@langchain/community/vectorstores/faiss";
+
 
 const loader = new TextLoader("./texts/J. K. Rowling - Harry Potter 1 - Sorcerer's Stone.txt");
+
+// const loader = new TextLoader("./texts/J. K. Rowling - Harry Potter 2 - The Chamber Of Secrets.txt");
+
 
 const docs = await loader.load();
 

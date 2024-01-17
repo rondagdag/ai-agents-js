@@ -1,30 +1,42 @@
 import { config } from "dotenv";
 config();
 
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { FaissStore } from "langchain/vectorstores/faiss";
-import { OpenAI } from "langchain/llms/openai";
-import { RetrievalQAChain, loadQAStuffChain } from "langchain/chains";
+import { ChatOpenAI, OpenAIEmbeddings } from "@langchain/openai";
+import { FaissStore } from "@langchain/community/vectorstores/faiss";
+import { formatDocumentsAsString } from "langchain/util/document";
+import { PromptTemplate } from "@langchain/core/prompts";
+import {
+  RunnableSequence,
+  RunnablePassthrough,
+} from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const embeddings = new OpenAIEmbeddings();
 const vectorStore = await FaissStore.load("./", embeddings);
 
-const model = new OpenAI({ temperature: 0 });
+const retriever = vectorStore.asRetriever();
 
-const chain = new RetrievalQAChain({
-  combineDocumentsChain: loadQAStuffChain(model),
-  retriever: vectorStore.asRetriever(),
-  returnSourceDocuments: true,
-  verbose: true,
-});
+const model = new ChatOpenAI({ temperature: 0 });
 
-let res = await chain.call({
-  query: "Who used Alohomora spell? Where was it used on which door?",
-});
-console.log(res.text);
+const prompt =
+  PromptTemplate.fromTemplate(`Answer the question based only on the following context:
+{context}
+
+Question: {question}`);
 
 
-res = await chain.call({
-  query: "Who is Norbert?",
-});
-console.log(res.text);
+const chain = RunnableSequence.from([
+  {
+    context: retriever.pipe(formatDocumentsAsString),
+    question: new RunnablePassthrough(),
+  },
+  prompt,
+  model,
+  new StringOutputParser(),
+]);
+
+let res = await chain.invoke("What is the Sorcerer's Stone?");
+console.log(res);
+
+res = await chain.invoke("Who is Norbert?");
+console.log(res);

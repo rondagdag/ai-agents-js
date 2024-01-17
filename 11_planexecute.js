@@ -2,16 +2,15 @@ import { config } from "dotenv";
 config();
 
 import { Calculator } from "langchain/tools/calculator";
-//import { SerpAPI } from "langchain/tools";
-import { ChainTool } from "langchain/tools";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PlanAndExecuteAgentExecutor } from "langchain/experimental/plan_and_execute";
-import { DynamicTool } from "langchain/tools";
-import { OpenAIEmbeddings } from "langchain/embeddings/openai";
-import { FaissStore } from "langchain/vectorstores/faiss";
-import { VectorDBQAChain } from "langchain/chains";
+import { DynamicTool } from "@langchain/community/tools/dynamic";
+import { AgentExecutor, createReactAgent } from "langchain/agents";
+import { pull } from "langchain/hub";
+
+import { ChatOpenAI, OpenAI, formatToOpenAIFunction } from "@langchain/openai";
+
 import { exec } from 'child_process';
 
+//#region Date Tool
 function getTodayDateTime() {
   const timeZone = 'America/Chicago';
   const options = {
@@ -40,8 +39,9 @@ const dateTool = new DynamicTool({
     "Useful to get current day, date and time.",
   func: async () => getTodayDateTime(),
 });
+//#endregion
 
-  
+//#region Say Tool
 const saySomething = (text) => {
   console.log(`Saying: ${text}`);
   exec(`say ${text}`, (error) => {
@@ -57,37 +57,34 @@ const sayTool = new DynamicTool({
   description:
     "call this to let the bot to say something, passing the text as input.",
   func: async (text) => saySomething(text),
-  returnDirect: true,
+});
+//#endregion
+
+const tools = [new Calculator(), dateTool, sayTool];
+
+// Get the prompt to use - you can modify this!
+// If you want to see the prompt in full, you can at:
+// https://smith.langchain.com/hub/hwchase17/react
+const prompt = await pull("hwchase17/react");
+
+const llm = new OpenAI({
+  modelName: "gpt-3.5-turbo-instruct",
+  temperature: 0,
 });
 
-const model = new ChatOpenAI({
-    temperature: 0,
-    modelName: "gpt-3.5-turbo",
-    verbose: true,
-  });
-/* Create the vectorstore */
-const embeddings = new OpenAIEmbeddings();
-const vectorStore = await FaissStore.load("./", embeddings);
-/* Create the chain */
-const chain = VectorDBQAChain.fromLLM(model, vectorStore);
+const agent = await createReactAgent({
+  llm,
+  tools,
+  prompt
+});
 
-const qaTool = new ChainTool({
-    name: "Harry_Potter_Sorcerers_Stone_QA",
-    description:
-      "Useful for when you need to ask questions about Harry Potter books",
-    chain: chain,
-    returnDirect: true,
-  });
-
-const tools = [new Calculator(), dateTool, qaTool, sayTool];
-
-const executor = PlanAndExecuteAgentExecutor.fromLLMAndTools({
-  llm: model,
+const agentExecutor = new AgentExecutor({
+  agent,
   tools
 });
 
-const result = await executor.call({
-  input: `How many Hogwart houses in Harry Potter? Multiply the result by today's year. Tell the bot to say the answer`,//
+const result = await agentExecutor.invoke({
+  input: `How many Hogwart houses in Harry Potter? Multiply the result by today's year. Show me your calculations. Tell the bot to say the answer`,//
 });
 
 //await saySomething("Hello, I am the Harry Potter robot. Ask me a question.");

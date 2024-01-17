@@ -1,9 +1,10 @@
 import { config } from "dotenv";
 config();
 
-import { SimpleSequentialChain, LLMChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
-import { PromptTemplate } from "langchain/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import { ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
 
 
 const responseTemplate1 = `
@@ -30,16 +31,20 @@ const reviewPromptTemplate2 = new PromptTemplate({
   inputVariables: ["synopsis"],
 });
 
-const llm = new OpenAI({ temperature: 0 });
-const reviewChain1 = new LLMChain({ llm, prompt: reviewPromptTemplate1 });
-const reviewChain2 = new LLMChain({ llm, prompt: reviewPromptTemplate2 });
+const model = new ChatOpenAI({ temperature: 0 });
+const reviewChain1 = reviewPromptTemplate1.pipe(model).pipe(new StringOutputParser());
+const intermediateResult = await reviewChain1.invoke( {spell: "Alohomora"});
 
-const overallChain = new SimpleSequentialChain({
-  chains: [reviewChain1, reviewChain2],
-  verbose: true,
-});
+const combinedChain = RunnableSequence.from([
+  {
+    synopsis: reviewChain1,
+  },
+  reviewPromptTemplate2,
+  model,
+  new StringOutputParser(),
+]);
 
-const result = await overallChain.run( "Alomohora");
-//const result = await overallChain.run( "Hello");
+const result = await combinedChain.invoke( {spell: "Alohomora"});
+//const result = await overallChain.run( "Hello");*/
 
 console.log(result);

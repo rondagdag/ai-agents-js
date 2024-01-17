@@ -14,13 +14,21 @@
   "bugs": {
     "url": "https://github.com/rondagdag/ai-agents-js/issues"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "homepage": "https://github.com/rondagdag/ai-agents-js#readme",
   "dependencies": {
+    "@langchain/community": "^0.0.17",
+    "@langchain/core": "^0.1.12",
+    "@langchain/openai": "^0.0.11",
     "dotenv": "^16.3.1",
-    "faiss-node": "^0.3.0",
-    "langchain": "^0.0.167",
-    "openai": "^3.3.0",
+    "langchain": "^0.1.2",
+    "openai": "^4.0.0",
     "sqlite3": "^5.1.6",
     "typeorm": "^0.3.17"
+  },
+  "devDependencies": {
+    "typescript": "^5.3.3"
   }
 }

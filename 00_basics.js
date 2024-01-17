@@ -1,23 +1,22 @@
 import { config } from "dotenv";
 config();
 
-import { Configuration, OpenAIApi } from "openai";
+import OpenAI from "openai";
 
-const configuration = new Configuration({
+const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
-const openai = new OpenAIApi(configuration);
 
 async function chat(input) {
   const messages = [{ role: "user", content: input }];
 
-  const response = await openai.createChatCompletion({
+  const response = await openai.chat.completions.create({
     model: "gpt-3.5-turbo",
     messages: messages,
     temperature: 0,
   });
 
-  return response.data.choices[0].message.content;
+  return response.choices[0].message;
 }
 
 const question = "Who wrote the 'Harry Potter' series book? What's the real name? Why choose that name?";
