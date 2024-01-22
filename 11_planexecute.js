@@ -70,6 +70,7 @@ const prompt = await pull("hwchase17/react");
 const llm = new OpenAI({
   modelName: "gpt-3.5-turbo-instruct",
   temperature: 0,
+//  verbose: true
 });
 
 const agent = await createReactAgent({
@@ -84,7 +85,7 @@ const agentExecutor = new AgentExecutor({
 });
 
 const result = await agentExecutor.invoke({
-  input: `How many Hogwart houses in Harry Potter? Multiply the result by today's year. Show me your calculations. Tell the bot to say the answer`,//
+  input: `How many Hogwart houses in Harry Potter? Multiply the result by today's year. Tell the bot to say the answer`,//
 });
 
 //await saySomething("Hello, I am the Harry Potter robot. Ask me a question.");

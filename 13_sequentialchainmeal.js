@@ -1,12 +1,13 @@
 import { config } from "dotenv";
 config();
 
-import { Configuration, ChatOpenAI } from "@langchain/openai";
+import { ChatOpenAI } from "@langchain/openai";
+import { PromptTemplate } from "@langchain/core/prompts";
+import { RunnableSequence } from "@langchain/core/runnables";
+import { JsonOutputFunctionsParser } from "langchain/output_parsers";
+import { StringOutputParser } from "@langchain/core/output_parsers";
+import OpenAI from "openai";
 
-import { SequentialChain, LLMChain } from "langchain/chains";
-import { OpenAI } from "langchain/llms/openai";
-import { ChatOpenAI } from "langchain/chat_models/openai";
-import { PromptTemplate } from "langchain/prompts";
 
 const PRIMARY_MODEL = 'gpt-3.5-turbo' //'gpt-4-0314' ' //"text-davinci-002"
 const SECONDARY_MODEL = 'gpt-3.5-turbo' //'text-curie-001'
@@ -23,66 +24,127 @@ const FREQ_PENALTY = 1.02
 //increasing the model's likelihood to talk about new topics
 const PRESENCE_PENALTY = 1.02
 
-let template = `I want someone who can suggest a Harry Potter 3 course meal. You are my master chef. You will come up with olfactory pleasant Harry Potter inspired {meal} dish that is appealing and inspired by {cuisine} cuisine. Identify which House they would fit in. Use {ingredient} in your recipe. Make sure it pairs well existing drink recipe of {inspiration}. Apply understanding of flavor compounds and food pairing theories. Give the dish a unique name. Ingredients must start in a new line. Add a catch phrase for the drink within double quotes. Always provide a rationale. Also try to provide a scientific explanation for why the ingredients were chosen. {additional_instructions}. Provide evidence and citations for where you took the recipe from.
+let template = `I want someone who can suggest a Harry Potter inspired dish. You are my master chef. You will come up with olfactory pleasant Harry Potter inspired {meal} dish that is appealing and inspired by {cuisine} cuisine. Identify which House they would fit in. Use {ingredient} in your recipe. Make sure it pairs well existing drink recipe of {inspiration}. Apply understanding of flavor compounds and food pairing theories. Give the dish a unique name with Harry Potter inspired title. Ingredients must start in a new line. Add a catch phrase for the meal within double quotes. Always provide a rationale. Also try to provide a scientific explanation for why the ingredients were chosen. {additional_instructions}. Provide evidence and citations for where you took the recipe from.
 Meal Name: 
 House: 
+Rationale:
 Ingredients:
 Instructions:
-Citations:
-Rationale:###
+Citations:###
 `
 
-//let llm = new OpenAI({ modelName:PRIMARY_MODEL,temperature: 0 });
-let llm = new ChatOpenAI({modelName:PRIMARY_MODEL, temperature:1, frequencyPenalty:FREQ_PENALTY, presencePenalty:PRESENCE_PENALTY, maxTokens:600, topP:1})
-let prompt4Meal = new PromptTemplate({inputVariables:["meal", "ingredient", "inspiration", "cuisine", "additional_instructions"], template})
-let mealGenChain = new LLMChain({llm:llm, prompt:prompt4Meal, outputKey:"meal_name", verbose:false})
+const parser = new JsonOutputFunctionsParser();
+
+const functionSchema = [
+  {
+    name: "meal",
+    description: "A meal",
+    parameters: {
+      type: "object",
+      properties: {
+        mealName: {
+          type: "string",
+          description: "The meal name",
+        },
+        house : {
+          type: "string",
+          description: "Harry Potter House it belongs to",
+        },
+        rationale: {
+          type: "string",
+          description: "Rationale of this meal",
+        },
+        ingredients: {
+          type: "string",
+          description: "ingredients used to make the meal",
+        },
+        instructions: {
+          type: "string",
+          description: "list of Instructions to prepare the meal",
+        },
+        cuisine: {
+          type: "string",
+          description: "based from cuisine",
+        },
+      },
+      required: ["mealName", "house", "rationale", "ingredients","instructions","cuisine"],
+    },
+  },
+];
+
+const model = new ChatOpenAI({ modelName:PRIMARY_MODEL, temperature: 1, frequencyPenalty:FREQ_PENALTY, presencePenalty:PRESENCE_PENALTY, maxTokens:600, topP:1});
+
+const prompt4Meal = new PromptTemplate({
+  template,
+  inputVariables: ["meal", "ingredient", "inspiration", "cuisine", "additional_instructions"],
+});
+
+const mealGenChain = prompt4Meal
+    .pipe(model.bind({
+        functions: functionSchema, 
+        function_call: { name: "meal" }
+      }))
+    .pipe(parser)
 
 //This is an LLMChain to generate a short haiku caption for the cocktail based on the ingredients.
-llm = new OpenAI({modelName:SECONDARY_MODEL, temperature:0.7, frequencyPenalty:FREQ_PENALTY, presencePenalty:PRESENCE_PENALTY, maxTokens:200, bestOf:3, topP:0.5})
 
-let template2 = `###Write a restaurant menu style short description for a {meal_name} inspired by with {cuisine} cuisine that has the following ingredients {ingredient}. Limit to 60 words. ###.`
+const llm = new ChatOpenAI({ modelName:SECONDARY_MODEL, temperature: 0.7, frequencyPenalty:FREQ_PENALTY, presencePenalty:PRESENCE_PENALTY, maxTokens:200, bestOf:3, topP:0.5 });
 
-let prompt4Caption = new PromptTemplate({inputVariables:["meal_name", "ingredient", "cuisine"], template:template2})
-let mealCaptionChain = new LLMChain({llm:llm, prompt:prompt4Caption, outputKey:"caption", verbose:false})
+let template2 = `###Write a restaurant menu style short description for a {mealName} inspired by with {cuisine} cuisine that has the following ingredients {ingredients}. Limit to 60 words. ###.`
 
-//"drink", "ingredient", "inspiration", "cuisine", "additional_instructions"
-//This is the overall chain where we run these two chains in sequence.
-let overallChain = new SequentialChain({
-    chains:[mealGenChain, mealCaptionChain],
-    inputVariables:['meal', 'ingredient', 'inspiration', 'cuisine', 'additional_instructions'],
-    // Here we return multiple variables
-    outputVariables:['meal_name', 'caption'],
-    verbose:true})
+const prompt4Caption = new PromptTemplate({
+  template: template2,
+  inputVariables: ["mealName", "ingredients", "cuisine"],
+});
+
+let captionChain = RunnableSequence.from([
+  { mealName : (prevInput) => prevInput.mealName,
+    ingredients : (prevInput) => prevInput.ingredients,
+    cuisine : (prevInput) => prevInput.cuisine
+  },
+  prompt4Caption,
+  llm,
+  new StringOutputParser()
+]);
+
+
+let overallChain = RunnableSequence.from([
+  prompt4Meal,
+  { mealName : (prevInput) => prevInput.mealName,
+    ingredients : (prevInput) => prevInput.ingredients,
+    cuisine : (prevInput) => prevInput.cuisine
+  },
+  prompt4Caption,
+  llm,
+  new StringOutputParser()
+]);
+
 //END LLM portions
 
 let { meal, ingredientInput, inspirationInput, cuisine } = GetRandomInput();
 console.log(meal);
 
-const result = await overallChain.call({'meal': meal, 'ingredient': ingredientInput, 'inspiration': inspirationInput, 'cuisine': cuisine,'meal_name': '', 'additional_instructions':''});
-console.log(result);
+const newMeal = await mealGenChain.invoke({'meal': meal, 'ingredient': ingredientInput, 'inspiration': inspirationInput, 'cuisine': cuisine,'meal_name': '', 'additional_instructions':''});
 
-let mealName = result['meal_name'].substring(0, result['meal_name'].indexOf("House:"));
-mealName = mealName.split("Meal Name:")[1].trim();
+console.log(newMeal);
 
-let caption = result['caption'];
+const caption = await captionChain.invoke(newMeal);
 console.log(caption);
 
-const configuration = new Configuration({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-const openai = new OpenAIApi(configuration);
+const openai = new OpenAI();
 
-let prompt4Diffusion = `${meal} meal: ${mealName}. \nCaption: ${caption}\nInspiration: ${cuisine} meal. Magazine cover --ar 4:3 --v 4 --c 100`;
+let prompt4Diffusion = `${meal} meal: ${newMeal.mealName}. \nCaption: ${caption}\nInspiration: ${cuisine} meal. Magazine cover --ar 4:3 --v 4 --c 100`;
 console.log(prompt4Diffusion);
 
 //Here's how you could create an image using OpenAI's API
-let image_resp = await openai.createImage({
+let image_resp = await openai.images.generate({
   prompt: prompt4Diffusion,
   n: 1,
   size: '512x512'
 });
 
-console.log(image_resp.data.data[0].url);
+console.log(image_resp.data);
+
 
 
 function getRandomChoices(array, k) {

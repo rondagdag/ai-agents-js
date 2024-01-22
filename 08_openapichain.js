@@ -8,5 +8,5 @@ const chain = await createOpenAPIChain(
 );
 const result = await chain.invoke({ query:`give me the list of books`});
 
-console.log(JSON.stringify(result, null, 2));
+console.log(JSON.parse(result.response));
 
