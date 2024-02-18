@@ -21,7 +21,7 @@ In this example you find a node app that can be used to learn LangChain in Javas
 - `12_sqltoolkit.js`: This example shows how to load and use an agent with a SQL toolkit.
 - `13_sequentialchaincocktail.js`: This example shows how to generate unique meals.
 
-To run these examples, clone the git repository and run npm install to install die dependencies. You need to create a .env file and add your API Key for OpenAI like this: OPENAI_API_KEY=sk-...
+To run these examples, clone the git repository and run npm install to install the dependencies. You need to create a .env file and add your API Key for OpenAI like this: OPENAI_API_KEY=sk-...
 
 This codes utilizes ES6 modules, to allow import statements and async/await within NodeJS.
   
@@ -32,13 +32,18 @@ This codes utilizes ES6 modules, to allow import statements and async/await with
 
 - [JS/TS Langchain](https://js.langchain.com/)
 
-- [Flowise](https://www.flowise.ai)
+- [Deep Learning Short Course - Build LLM apps with Langchan JS](https://www.deeplearning.ai/short-courses/build-llm-apps-with-langchain-js/)
+
+- [Flowise](https://flowiseai.com/)
 
 - [Learn Prompting](https://learnprompting.org/)
 
 - [Inspired by LangChain JS Crash Course](https://github.com/Coding-Crashkurse/LangChain-JS-Full-Course#readme)
 
 - [Harry Potter Manuscript](https://github.com/amephraim/nlp/blob/master/texts/)
+```
+curl "https://raw.githubusercontent.com/amephraim/nlp/master/texts/J.%20K.%20Rowling%20-%20Harry%20Potter%201%20-%20Sorcerer's%20Stone.txt" > "texts/J. K. Rowling - Harry Potter 1 - Sorcerer's Stone.txt"
+```
 
 - [OpenAI Cocktail Recipes Generator](https://github.com/swamichandra/cocktails)
 

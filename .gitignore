@@ -3,4 +3,4 @@ faiss.index
 docstore.json
 package-lock.json
 .env
-texts/
+texts/*
