@@ -40,7 +40,7 @@ export const run = async () => {
     )}`
   );
 
-  console.log(`Got output ${result.output}`);
+  console.log(`Got output ${JSON.stringify(result.output,null,4)}`);
 
 
 //   const input1 = `SELECT a.name, b.name FROM lovers 
