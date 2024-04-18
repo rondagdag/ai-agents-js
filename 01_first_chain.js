@@ -8,7 +8,7 @@ import { PromptTemplate } from "@langchain/core/prompts";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 
 const model = new ChatOpenAI({
-  modelName: "gpt-3.5-turbo-1106",
+  modelName: "gpt-3.5-turbo",
   temperature: 0
 });
 

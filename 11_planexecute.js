@@ -1,7 +1,7 @@
 import { config } from "dotenv";
 config();
 
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator";
 import { DynamicTool } from "@langchain/community/tools/dynamic";
 import { AgentExecutor, createReactAgent } from "langchain/agents";
 import { pull } from "langchain/hub";
