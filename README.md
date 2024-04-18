@@ -25,7 +25,7 @@ To run these examples, clone the git repository and run npm install to install t
 
 This codes utilizes ES6 modules, to allow import statements and async/await within NodeJS.
   
-Click on the link to test it out! 
+Click my binder link to test it out! 
 [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/rondagdag/ai-agents-js/HEAD)
 
 ### Presentation resources
