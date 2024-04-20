@@ -32,6 +32,7 @@ const reviewPromptTemplate2 = new PromptTemplate({
 });
 
 const model = new ChatOpenAI({ temperature: 0 });
+
 const reviewChain1 = reviewPromptTemplate1.pipe(model).pipe(new StringOutputParser());
 const intermediateResult = await reviewChain1.invoke( {spell: "Alohomora"});
 

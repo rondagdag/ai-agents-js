@@ -20,6 +20,7 @@ In this example you find a node app that can be used to learn LangChain in Javas
 - `11_planexecute.js`: Plan and execute agents accomplish an objective by first planning what to do, then executing the sub tasks. This idea is largely inspired by BabyAGI and then the "Plan-and-Solve" paper.
 - `12_sqltoolkit.js`: This example shows how to load and use an agent with a SQL toolkit.
 - `13_sequentialchaincocktail.js`: This example shows how to generate unique meals.
+- `14_moderation.js`: This example shows how to add moderation/filter before sending to LLM.
 
 To run these examples, clone the git repository and run npm install to install the dependencies. You need to create a .env file and add your API Key for OpenAI like this: OPENAI_API_KEY=sk-...
 

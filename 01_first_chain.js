@@ -1,3 +1,10 @@
+/* 
+    PromptTemplate + LLM = 🔗
+                           ⬇
+                           invoke
+                           = input variable(s) ⮕ prompt template ⮕ prompt ⮕ model ⮕ result
+*/
+
 import { config } from "dotenv";
 config();
 
