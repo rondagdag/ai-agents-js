@@ -11,7 +11,6 @@ const loader = new TextLoader("./texts/J. K. Rowling - Harry Potter 1 - Sorcerer
 
 // const loader = new TextLoader("./texts/J. K. Rowling - Harry Potter 2 - The Chamber Of Secrets.txt");
 
-
 const docs = await loader.load();
 
 const splitter = new CharacterTextSplitter({

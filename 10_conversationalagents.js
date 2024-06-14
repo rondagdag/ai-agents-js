@@ -3,7 +3,7 @@ config();
 
 
 import { BufferMemory } from "langchain/memory";
-import { Calculator } from "langchain/tools/calculator";
+import { Calculator } from "@langchain/community/tools/calculator";
 import { DynamicTool } from "@langchain/community/tools/dynamic";
 
 import { RunnableSequence } from "@langchain/core/runnables";

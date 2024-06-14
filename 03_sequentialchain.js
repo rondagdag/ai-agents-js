@@ -68,5 +68,5 @@ const translationChain = RunnableSequence.from([
 const result = await translationChain.invoke({
   book_name: "Harry Potter And The Half-Blood Prince",
   experience: "It is the best!",
-  language: "Greek"});
+  language: "Filipino",});
 console.log(result);

@@ -22,8 +22,6 @@ const model = new ChatOpenAI({
 const joke = await model.invoke(
   "Tell me a Harry Potter joke."
 );
-console.log(joke)
-
 
 const promptTemplate = PromptTemplate.fromTemplate(
   "Be very funny when answering questions\nQuestion: {question}"
